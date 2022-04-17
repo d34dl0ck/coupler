@@ -4,8 +4,8 @@ type ConflictSolveStrategy interface {
 	Solve(k ResolvingKey, s ResolvingStrategy, r *Registrations) ResolvingStrategy
 }
 
-type overwriteStrategy struct{}
+type OverwriteStrategy struct{}
 
-func (overwriteStrategy) Solve(k ResolvingKey, s ResolvingStrategy, r *Registrations) ResolvingStrategy {
+func (OverwriteStrategy) Solve(k ResolvingKey, s ResolvingStrategy, r *Registrations) ResolvingStrategy {
 	return s
 }

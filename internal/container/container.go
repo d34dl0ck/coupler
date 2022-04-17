@@ -41,6 +41,6 @@ func (c *Container) Resolve(k ResolvingKey) (interface{}, error) {
 func NewContainer() *Container {
 	return &Container{
 		registrations: make(Registrations, defaultStartCapacity),
-		strategy:      overwriteStrategy{},
+		strategy:      OverwriteStrategy{},
 	}
 }
