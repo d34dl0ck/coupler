@@ -87,3 +87,8 @@ func Resolve[T interface{}]() (T, error) {
 
 	return raw.(T), err
 }
+
+func ResolveNamed[T interface{}](name string) (T, error) {
+	raw, err := c.Resolve(container.NewRawResolvingKey(name))
+	return raw.(T), err
+}

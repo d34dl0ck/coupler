@@ -3,6 +3,7 @@ package coupler
 import (
 	"testing"
 
+	"github.com/d34dl0ck/coupler/internal/container"
 	"github.com/stretchr/testify/require"
 )
 
@@ -58,6 +59,34 @@ func TestRegistrationByType(t *testing.T) {
 
 	require.NoError(t, err, "no err was expected for resolving")
 	require.Equal(t, expected, actual)
+}
+
+func TestRegistrationByTypeWithName(t *testing.T) {
+	t.Parallel()
+	dependencyName := "some_mega_dependency"
+
+	expected := createExpected(t)
+	err := Register(
+		ByType[testStruct](),
+		WithName(dependencyName))
+	require.NoError(t, err, "no err was expected for struct registration")
+
+	actual, err := ResolveNamed[testStruct](dependencyName)
+
+	require.NoError(t, err, "no err was expected for resolving")
+	require.Equal(t, expected, actual)
+}
+
+func TestErrorWhenStrategyWasNotSet(t *testing.T) {
+	t.Parallel()
+
+	err := Register(byEmptyRegistration())
+
+	require.ErrorIs(t, err, container.ErrStrategyIsEmpty)
+}
+
+func byEmptyRegistration() ResolveOption {
+	return func(r *Registration) {}
 }
 
 func createExpected(t *testing.T) testStruct {
