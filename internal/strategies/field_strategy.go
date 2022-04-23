@@ -7,11 +7,19 @@ import (
 	"github.com/pkg/errors"
 )
 
+var (
+	ErrNilType = errors.New("input is nil")
+)
+
 type FieldStrategy struct {
 	t reflect.Type
 }
 
 func NewFieldStrategy(t reflect.Type) (core.ResolvingStrategy, error) {
+	if t == nil {
+		return nil, ErrNilType
+	}
+
 	return FieldStrategy{
 		t: t,
 	}, nil

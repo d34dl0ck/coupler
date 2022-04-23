@@ -11,6 +11,10 @@ type InstanceStrategy struct {
 }
 
 func NewInstanceStrategy(instance interface{}) (core.ResolvingStrategy, error) {
+	if instance == nil {
+		return nil, ErrNilType
+	}
+
 	return InstanceStrategy{
 		instance: instance,
 	}, nil

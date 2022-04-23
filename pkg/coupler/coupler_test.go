@@ -127,6 +127,27 @@ func TestErrorWhenRegistrationOptionReturnError(t *testing.T) {
 	require.ErrorIs(t, ErrExpected, err)
 }
 
+func TestErrorTypeInterfaceRegistration(t *testing.T) {
+	t.Parallel()
+
+	err := Register(ByType[testInterface]())
+	require.ErrorIs(t, err, ErrRegistration, "error mismatch")
+}
+
+func TestErrorNilInstanceRegistration(t *testing.T) {
+	t.Parallel()
+
+	err := Register(ByInstance(nil))
+	require.ErrorIs(t, err, ErrRegistration, "error mismatch")
+}
+
+func TestErrorNilFuncRegistration(t *testing.T) {
+	t.Parallel()
+
+	err := Register(ByFunc(nil))
+	require.ErrorIs(t, err, ErrRegistration, "error mismatch")
+}
+
 func byEmptyResolve() ResolveOption {
 	return func(r *Registration) error {
 		return nil

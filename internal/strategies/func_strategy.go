@@ -12,6 +12,10 @@ type FuncStrategy struct {
 }
 
 func NewFuncStrategy(function interface{}) (core.ResolvingStrategy, error) {
+	if function == nil {
+		return nil, ErrNilType
+	}
+
 	return FuncStrategy{
 		function: function,
 	}, nil

@@ -76,3 +76,10 @@ func TestFieldStrategyDefaultKey(t *testing.T) {
 
 	require.Equal(t, expected, actual, "key mismatch")
 }
+
+func TestErrorNilType(t *testing.T) {
+	t.Parallel()
+
+	_, err := strategies.NewFieldStrategy(nil)
+	require.ErrorIs(t, err, strategies.ErrNilType, "error mismatch")
+}

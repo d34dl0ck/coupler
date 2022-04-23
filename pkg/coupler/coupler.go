@@ -10,7 +10,8 @@ import (
 )
 
 var (
-	c core.Container
+	c               core.Container
+	ErrRegistration = errors.New("cannot register dependency")
 )
 
 type Strategy core.ResolvingStrategy
@@ -82,7 +83,7 @@ func ByFunc(f interface{}) ResolveOption {
 	return func(r *Registration) error {
 		s, err := strategies.NewFuncStrategy(f)
 		if err != nil {
-			return err
+			return errors.Wrap(ErrRegistration, err.Error())
 		}
 		r.Strategy = s
 		return nil
@@ -93,7 +94,7 @@ func ByInstance(i interface{}) ResolveOption {
 	return func(r *Registration) error {
 		s, err := strategies.NewInstanceStrategy(i)
 		if err != nil {
-			return err
+			return errors.Wrap(ErrRegistration, err.Error())
 		}
 		r.Strategy = s
 		return nil
@@ -105,7 +106,7 @@ func ByType[T interface{}]() ResolveOption {
 	return func(r *Registration) error {
 		s, err := strategies.NewFieldStrategy(reflect.TypeOf(def))
 		if err != nil {
-			return err
+			return errors.Wrap(ErrRegistration, err.Error())
 		}
 		r.Strategy = s
 		return nil

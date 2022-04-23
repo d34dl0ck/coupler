@@ -42,3 +42,10 @@ func TestInstanceStrategyDefaultKey(t *testing.T) {
 
 	require.Equal(t, expected, actual, "key mismatch")
 }
+
+func TestErrorNilInstance(t *testing.T) {
+	t.Parallel()
+
+	_, err := strategies.NewInstanceStrategy(nil)
+	require.ErrorIs(t, err, strategies.ErrNilType, "error mismatch")
+}
