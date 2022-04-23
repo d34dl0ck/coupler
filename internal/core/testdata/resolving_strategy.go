@@ -7,7 +7,7 @@ package testdata
 import (
 	reflect "reflect"
 
-	container "github.com/d34dl0ck/coupler/internal/container"
+	core "github.com/d34dl0ck/coupler/internal/core"
 	gomock "github.com/golang/mock/gomock"
 )
 
@@ -35,10 +35,10 @@ func (m *MockResolvingStrategy) EXPECT() *MockResolvingStrategyMockRecorder {
 }
 
 // ProvideDefaultKey mocks base method.
-func (m *MockResolvingStrategy) ProvideDefaultKey() container.ResolvingKey {
+func (m *MockResolvingStrategy) ProvideDefaultKey() core.ResolvingKey {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ProvideDefaultKey")
-	ret0, _ := ret[0].(container.ResolvingKey)
+	ret0, _ := ret[0].(core.ResolvingKey)
 	return ret0
 }
 
@@ -49,7 +49,7 @@ func (mr *MockResolvingStrategyMockRecorder) ProvideDefaultKey() *gomock.Call {
 }
 
 // Resolve mocks base method.
-func (m *MockResolvingStrategy) Resolve(r container.Registrations) (interface{}, error) {
+func (m *MockResolvingStrategy) Resolve(r core.Resolver) (interface{}, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Resolve", r)
 	ret0, _ := ret[0].(interface{})

@@ -4,21 +4,22 @@ import (
 	"reflect"
 
 	"github.com/d34dl0ck/coupler/internal/container"
+	"github.com/d34dl0ck/coupler/internal/core"
 	"github.com/d34dl0ck/coupler/internal/strategies"
 	"github.com/pkg/errors"
 )
 
 var (
-	c *container.Container
+	c core.Container
 )
 
-type Strategy container.ResolvingStrategy
+type Strategy core.ResolvingStrategy
 
-type Key container.ResolvingKey
+type Key core.ResolvingKey
 
-type RegistrationOption func(r *Registration)
+type RegistrationOption func(r *Registration) error
 
-type ResolveOption func(r *Registration)
+type ResolveOption func(r *Registration) error
 
 type Registration struct {
 	Key      Key
@@ -32,18 +33,25 @@ func init() {
 func Register(resolveOption ResolveOption, opts ...RegistrationOption) error {
 	r := &Registration{}
 
-	resolveOption(r)
+	err := resolveOption(r)
+
+	if err != nil {
+		return err
+	}
 
 	for _, opt := range opts {
 		if opt != nil {
-			opt(r)
+			err := opt(r)
+			if err != nil {
+				return err
+			}
 		}
 	}
 
 	key := r.Key
 
 	if r.Strategy == nil {
-		return errors.Wrapf(container.ErrStrategyIsEmpty, "no strategy was set for key %s", key)
+		return errors.Wrapf(core.ErrStrategyIsEmpty, "no strategy was set for key %s", key)
 	}
 
 	if key == nil || key.IsEmpty() {
@@ -55,40 +63,70 @@ func Register(resolveOption ResolveOption, opts ...RegistrationOption) error {
 }
 
 func WithName(n string) RegistrationOption {
-	return func(r *Registration) {
-		r.Key = container.NewRawResolvingKey(n)
+	return func(r *Registration) error {
+		r.Key = core.NewRawResolvingKey(n)
+		return nil
+	}
+}
+
+func AsImplementationOf[T interface{}]() RegistrationOption {
+	return func(r *Registration) error {
+		t := reflect.TypeOf((*T)(nil))
+		elemType := t.Elem()
+		r.Key = core.NewTypeResolvingKey(elemType)
+		return nil
 	}
 }
 
 func ByFunc(f interface{}) ResolveOption {
-	return func(r *Registration) {
-		r.Strategy = strategies.NewFuncStrategy(f)
+	return func(r *Registration) error {
+		s, err := strategies.NewFuncStrategy(f)
+		if err != nil {
+			return err
+		}
+		r.Strategy = s
+		return nil
 	}
 }
 
 func ByInstance(i interface{}) ResolveOption {
-	return func(r *Registration) {
-		r.Strategy = strategies.NewInstanceStrategy(i)
+	return func(r *Registration) error {
+		s, err := strategies.NewInstanceStrategy(i)
+		if err != nil {
+			return err
+		}
+		r.Strategy = s
+		return nil
 	}
 }
 
 func ByType[T interface{}]() ResolveOption {
 	var def T
-	return func(r *Registration) {
-		r.Strategy = strategies.NewFieldStrategy(reflect.TypeOf(def))
+	return func(r *Registration) error {
+		s, err := strategies.NewFieldStrategy(reflect.TypeOf(def))
+		if err != nil {
+			return err
+		}
+		r.Strategy = s
+		return nil
 	}
 }
 
 func Resolve[T interface{}]() (T, error) {
 	var def T
+
 	desiredType := reflect.TypeOf(def)
 
-	raw, err := c.Resolve(container.NewTypeResolvingKey(desiredType))
+	if desiredType == nil {
+		desiredType = reflect.TypeOf((*T)(nil)).Elem()
+	}
+
+	raw, err := c.Resolve(core.NewTypeResolvingKey(desiredType))
 
 	return raw.(T), err
 }
 
 func ResolveNamed[T interface{}](name string) (T, error) {
-	raw, err := c.Resolve(container.NewRawResolvingKey(name))
+	raw, err := c.Resolve(core.NewRawResolvingKey(name))
 	return raw.(T), err
 }

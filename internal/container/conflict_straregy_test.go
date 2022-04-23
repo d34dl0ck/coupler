@@ -1,4 +1,4 @@
-package container_test
+package container
 
 import (
 	"testing"
@@ -6,8 +6,8 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
 
-	"github.com/d34dl0ck/coupler/internal/container"
-	"github.com/d34dl0ck/coupler/internal/container/testdata"
+	"github.com/d34dl0ck/coupler/internal/core"
+	"github.com/d34dl0ck/coupler/internal/core/testdata"
 )
 
 func TestOverwriteStrategy(t *testing.T) {
@@ -16,11 +16,11 @@ func TestOverwriteStrategy(t *testing.T) {
 	defer ctrl.Finish()
 
 	expected := testdata.NewMockResolvingStrategy(ctrl)
-	strategy := container.OverwriteStrategy{}
-	registrations := make(container.Registrations, 0)
+	strategy := OverwriteStrategy{}
+	registrations := make(Registrations, 0)
 
 	actual := strategy.Solve(
-		container.NewRawResolvingKey("some"),
+		core.NewRawResolvingKey("some"),
 		expected,
 		&registrations,
 	)

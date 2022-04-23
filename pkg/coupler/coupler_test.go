@@ -1,9 +1,10 @@
 package coupler
 
 import (
+	"errors"
 	"testing"
 
-	"github.com/d34dl0ck/coupler/internal/container"
+	"github.com/d34dl0ck/coupler/internal/core"
 	"github.com/stretchr/testify/require"
 )
 
@@ -12,9 +13,21 @@ const (
 	expectedInt    = 32
 )
 
+var (
+	ErrExpected = errors.New("some expected error")
+)
+
 type testStruct struct {
 	SomeString string
 	SomeInt    int
+}
+
+func (testStruct) TestMethod(t *testing.T) {
+	t.Helper()
+}
+
+type testInterface interface {
+	TestMethod(t *testing.T)
 }
 
 func TestRegistrationByInstance(t *testing.T) {
@@ -77,19 +90,62 @@ func TestRegistrationByTypeWithName(t *testing.T) {
 	require.Equal(t, expected, actual)
 }
 
+func TestRegistrationByTypeAsImplementation(t *testing.T) {
+	t.Parallel()
+
+	expected := createExpected(t)
+	err := Register(
+		ByType[testStruct](),
+		AsImplementationOf[testInterface]())
+	require.NoError(t, err, "no err was expected for struct registration")
+
+	actual, err := Resolve[testInterface]()
+
+	require.NoError(t, err, "no err was expected for resolving")
+	require.Equal(t, expected, actual)
+}
+
 func TestErrorWhenStrategyWasNotSet(t *testing.T) {
 	t.Parallel()
 
-	err := Register(byEmptyRegistration())
+	err := Register(byEmptyResolve())
 
-	require.ErrorIs(t, err, container.ErrStrategyIsEmpty)
+	require.ErrorIs(t, err, core.ErrStrategyIsEmpty)
 }
 
-func byEmptyRegistration() ResolveOption {
-	return func(r *Registration) {}
+func TestErrorWhenResolveOptionReturnError(t *testing.T) {
+	t.Parallel()
+
+	err := Register(byErrorResolve())
+	require.ErrorIs(t, ErrExpected, err)
 }
 
-func createExpected(t *testing.T) testStruct {
+func TestErrorWhenRegistrationOptionReturnError(t *testing.T) {
+	t.Parallel()
+
+	err := Register(byEmptyResolve(), withErrorRegistration())
+	require.ErrorIs(t, ErrExpected, err)
+}
+
+func byEmptyResolve() ResolveOption {
+	return func(r *Registration) error {
+		return nil
+	}
+}
+
+func byErrorResolve() ResolveOption {
+	return func(r *Registration) error {
+		return ErrExpected
+	}
+}
+
+func withErrorRegistration() RegistrationOption {
+	return func(r *Registration) error {
+		return ErrExpected
+	}
+}
+
+func createExpected(t *testing.T) testInterface {
 	t.Helper()
 
 	err := Register(ByInstance(expectedString))

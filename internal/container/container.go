@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"sync"
 
+	"github.com/d34dl0ck/coupler/internal/core"
 	"github.com/pkg/errors"
 )
 
@@ -11,23 +12,23 @@ const (
 	defaultStartCapacity = 16
 )
 
-type Registrations map[ResolvingKey]ResolvingStrategy
+type Registrations map[core.ResolvingKey]core.ResolvingStrategy
 
-type Container struct {
+type MapContainer struct {
 	registrations Registrations
 	strategy      ConflictSolveStrategy
 	mu            *sync.RWMutex
 }
 
-func NewContainer() *Container {
-	return &Container{
+func NewContainer() *MapContainer {
+	return &MapContainer{
 		registrations: make(Registrations, defaultStartCapacity),
 		strategy:      OverwriteStrategy{},
 		mu:            &sync.RWMutex{},
 	}
 }
 
-func (c *Container) Register(k ResolvingKey, s ResolvingStrategy) {
+func (c *MapContainer) Register(k core.ResolvingKey, s core.ResolvingStrategy) {
 	result := c.checkExistingRegistrations(k, s)
 
 	c.mu.Lock()
@@ -35,19 +36,19 @@ func (c *Container) Register(k ResolvingKey, s ResolvingStrategy) {
 	c.registrations[k] = result
 }
 
-func (c *Container) Resolve(k ResolvingKey) (interface{}, error) {
+func (c *MapContainer) Resolve(k core.ResolvingKey) (interface{}, error) {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
 	s, hasValue := c.registrations[k]
 
 	if !hasValue {
-		return nil, errors.Wrap(ErrKeyNotRegistered, fmt.Sprintf("failed to find key %s", k.Value()))
+		return nil, errors.Wrap(core.ErrKeyNotRegistered, fmt.Sprintf("failed to find key %s", k.Value()))
 	}
 
-	return s.Resolve(c.registrations)
+	return s.Resolve(c)
 }
 
-func (c *Container) checkExistingRegistrations(k ResolvingKey, s ResolvingStrategy) ResolvingStrategy {
+func (c *MapContainer) checkExistingRegistrations(k core.ResolvingKey, s core.ResolvingStrategy) core.ResolvingStrategy {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
 

@@ -3,44 +3,38 @@ package strategies
 import (
 	"reflect"
 
+	"github.com/d34dl0ck/coupler/internal/core"
 	"github.com/pkg/errors"
-
-	"github.com/d34dl0ck/coupler/internal/container"
 )
 
 type FieldStrategy struct {
 	t reflect.Type
 }
 
-func NewFieldStrategy(t reflect.Type) container.ResolvingStrategy {
+func NewFieldStrategy(t reflect.Type) (core.ResolvingStrategy, error) {
 	return FieldStrategy{
 		t: t,
-	}
+	}, nil
 }
 
-func (s FieldStrategy) Resolve(r container.Registrations) (interface{}, error) {
+func (s FieldStrategy) Resolve(r core.Resolver) (interface{}, error) {
 	result := reflect.New(s.t)
 	for i := 0; i < result.Elem().NumField(); i++ {
 		field := result.Elem().Field(i).Type()
-		key := container.NewTypeResolvingKey(field)
-		strategy, hasValue := r[key]
+		key := core.NewTypeResolvingKey(field)
 
-		if hasValue {
-			instance, err := strategy.Resolve(r)
+		instance, err := r.Resolve(key)
 
-			if err != nil {
-				return nil, errors.Wrapf(container.ErrResolveFailed, "failed to resolve key %s", key)
-			}
-
-			result.Elem().Field(i).Set(reflect.ValueOf(instance))
-		} else {
-			return nil, errors.Wrapf(container.ErrDependencyNotRegistered, "dependency with key %s was not registered", key)
+		if err != nil {
+			return nil, errors.Wrapf(err, "failed to resolve key %s", key)
 		}
+
+		result.Elem().Field(i).Set(reflect.ValueOf(instance))
 	}
 
 	return result.Elem().Interface(), nil
 }
 
-func (s FieldStrategy) ProvideDefaultKey() container.ResolvingKey {
-	return container.NewTypeResolvingKey(s.t)
+func (s FieldStrategy) ProvideDefaultKey() core.ResolvingKey {
+	return core.NewTypeResolvingKey(s.t)
 }

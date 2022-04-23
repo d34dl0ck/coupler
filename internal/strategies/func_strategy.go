@@ -3,49 +3,42 @@ package strategies
 import (
 	"reflect"
 
+	"github.com/d34dl0ck/coupler/internal/core"
 	"github.com/pkg/errors"
-
-	"github.com/d34dl0ck/coupler/internal/container"
 )
 
 type FuncStrategy struct {
 	function interface{}
 }
 
-func NewFuncStrategy(function interface{}) container.ResolvingStrategy {
+func NewFuncStrategy(function interface{}) (core.ResolvingStrategy, error) {
 	return FuncStrategy{
 		function: function,
-	}
+	}, nil
 }
 
-func (s FuncStrategy) Resolve(r container.Registrations) (interface{}, error) {
+func (s FuncStrategy) Resolve(r core.Resolver) (interface{}, error) {
 	fType := reflect.TypeOf(s.function)
 	args := []reflect.Value{}
 	for i := 0; i < fType.NumIn(); i++ {
 		arg := fType.In(i)
-		key := container.NewTypeResolvingKey(arg)
-		strategy, hasValue := r[key]
+		key := core.NewTypeResolvingKey(arg)
+		instance, err := r.Resolve(key)
 
-		if hasValue {
-			instance, err := strategy.Resolve(r)
-
-			if err != nil {
-				return nil, errors.Wrapf(container.ErrResolveFailed, "failed to resolve key %s", key)
-			}
-
-			args = append(args, reflect.ValueOf(instance))
-		} else {
-			return nil, errors.Wrapf(container.ErrDependencyNotRegistered, "dependency with key %s was not registered", key)
+		if err != nil {
+			return nil, errors.Wrapf(err, "failed to resolve dependency %s", key)
 		}
+
+		args = append(args, reflect.ValueOf(instance))
 	}
 
 	result := reflect.ValueOf(s.function).Call(args)
 	return result[0].Interface(), nil
 }
 
-func (s FuncStrategy) ProvideDefaultKey() container.ResolvingKey {
+func (s FuncStrategy) ProvideDefaultKey() core.ResolvingKey {
 	fType := reflect.TypeOf(s.function)
 	resultType := fType.Out(0)
 
-	return container.NewTypeResolvingKey(resultType)
+	return core.NewTypeResolvingKey(resultType)
 }

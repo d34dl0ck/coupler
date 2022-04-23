@@ -1,10 +1,10 @@
-package container_test
+package container
 
 import (
 	"testing"
 
-	"github.com/d34dl0ck/coupler/internal/container"
-	"github.com/d34dl0ck/coupler/internal/container/testdata"
+	"github.com/d34dl0ck/coupler/internal/core"
+	"github.com/d34dl0ck/coupler/internal/core/testdata"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
 )
@@ -13,12 +13,13 @@ func TestResolveWithStrategy(t *testing.T) {
 	t.Parallel()
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
+
 	expected := "some_expected_obj"
 
-	c := container.NewContainer()
-	k := container.NewRawResolvingKey("some_key")
+	c := NewContainer()
+	k := core.NewRawResolvingKey("some_key")
 	strategyMock := testdata.NewMockResolvingStrategy(ctrl)
-	strategyMock.EXPECT().Resolve(gomock.Len(1)).Return(expected, nil)
+	strategyMock.EXPECT().Resolve(c).Return(expected, nil)
 	c.Register(k, strategyMock)
 
 	actual, err := c.Resolve(k)
@@ -32,10 +33,10 @@ func TestConflictSolvedWithOverwrite(t *testing.T) {
 	defer ctrl.Finish()
 	expected := "some_expected_obj"
 
-	c := container.NewContainer()
-	k := container.NewRawResolvingKey("some_key")
+	c := NewContainer()
+	k := core.NewRawResolvingKey("some_key")
 	strategyMock := testdata.NewMockResolvingStrategy(ctrl)
-	strategyMock.EXPECT().Resolve(gomock.Len(1)).Return(expected, nil)
+	strategyMock.EXPECT().Resolve(c).Return(expected, nil)
 	c.Register(k, strategyMock)
 	c.Register(k, strategyMock)
 
@@ -47,10 +48,10 @@ func TestConflictSolvedWithOverwrite(t *testing.T) {
 func TestErrMissingKey(t *testing.T) {
 	t.Parallel()
 
-	c := container.NewContainer()
-	k := container.NewRawResolvingKey("some_key")
+	c := NewContainer()
+	k := core.NewRawResolvingKey("some_key")
 
 	actual, err := c.Resolve(k)
 	require.Nil(t, actual, "actual should be nil")
-	require.ErrorIs(t, err, container.ErrKeyNotRegistered)
+	require.ErrorIs(t, err, core.ErrKeyNotRegistered)
 }
