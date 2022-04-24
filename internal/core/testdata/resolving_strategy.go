@@ -35,10 +35,10 @@ func (m *MockResolvingStrategy) EXPECT() *MockResolvingStrategyMockRecorder {
 }
 
 // ProvideDefaultKey mocks base method.
-func (m *MockResolvingStrategy) ProvideDefaultKey() core.ResolvingKey {
+func (m *MockResolvingStrategy) ProvideDefaultKey() core.DependencyKey {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ProvideDefaultKey")
-	ret0, _ := ret[0].(core.ResolvingKey)
+	ret0, _ := ret[0].(core.DependencyKey)
 	return ret0
 }
 

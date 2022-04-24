@@ -34,7 +34,7 @@ func TestInstanceStrategyDefaultKey(t *testing.T) {
 	input := TestStruct{
 		SomeString: expectedString,
 	}
-	expected := core.NewTypeResolvingKey(reflect.TypeOf(input))
+	expected := core.NewTypeDependencyKey(reflect.TypeOf(input))
 	strategy, err := strategies.NewInstanceStrategy(input)
 	require.NoError(t, err, "err was not expected")
 
@@ -47,5 +47,5 @@ func TestErrorNilInstance(t *testing.T) {
 	t.Parallel()
 
 	_, err := strategies.NewInstanceStrategy(nil)
-	require.ErrorIs(t, err, strategies.ErrNilType, "error mismatch")
+	require.ErrorIs(t, err, strategies.ErrNilInput, "error mismatch")
 }

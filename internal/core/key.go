@@ -2,7 +2,7 @@ package core
 
 import "reflect"
 
-type ResolvingKey interface {
+type DependencyKey interface {
 	Value() string
 	IsEmpty() bool
 }
@@ -19,13 +19,13 @@ func (k stringKey) IsEmpty() bool {
 	return k.value == ""
 }
 
-func NewTypeResolvingKey(t reflect.Type) stringKey {
+func NewTypeDependencyKey(t reflect.Type) stringKey {
 	return stringKey{
 		value: t.Name(),
 	}
 }
 
-func NewRawResolvingKey(s string) stringKey {
+func NewRawDependencyKey(s string) stringKey {
 	return stringKey{
 		value: s,
 	}

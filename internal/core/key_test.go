@@ -33,7 +33,7 @@ func TestNewRawKey(t *testing.T) {
 	t.Parallel()
 
 	expected := "expected value"
-	key := NewRawResolvingKey(expected)
+	key := NewRawDependencyKey(expected)
 
 	actual := key.Value()
 
@@ -47,7 +47,7 @@ func TestNewTypeKey(t *testing.T) {
 	var empty testStruct
 	typeToResolve := reflect.TypeOf(empty)
 	expected := typeToResolve.Name()
-	key := NewTypeResolvingKey(typeToResolve)
+	key := NewTypeDependencyKey(typeToResolve)
 
 	actual := key.Value()
 

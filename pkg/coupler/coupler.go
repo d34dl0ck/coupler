@@ -10,13 +10,14 @@ import (
 )
 
 var (
-	c               core.Container
-	ErrRegistration = errors.New("cannot register dependency")
+	c                           core.Container
+	ErrRegistration             = errors.New("cannot register dependency")
+	ErrDependenciesInconsistent = errors.New("some of registered dependencies cannot be resolved cause of missing dependency")
 )
 
 type Strategy core.ResolvingStrategy
 
-type Key core.ResolvingKey
+type Key core.DependencyKey
 
 type RegistrationOption func(r *Registration) error
 
@@ -65,7 +66,7 @@ func Register(resolveOption ResolveOption, opts ...RegistrationOption) error {
 
 func WithName(n string) RegistrationOption {
 	return func(r *Registration) error {
-		r.Key = core.NewRawResolvingKey(n)
+		r.Key = core.NewRawDependencyKey(n)
 		return nil
 	}
 }
@@ -74,7 +75,7 @@ func AsImplementationOf[T interface{}]() RegistrationOption {
 	return func(r *Registration) error {
 		t := reflect.TypeOf((*T)(nil))
 		elemType := t.Elem()
-		r.Key = core.NewTypeResolvingKey(elemType)
+		r.Key = core.NewTypeDependencyKey(elemType)
 		return nil
 	}
 }
@@ -122,12 +123,26 @@ func Resolve[T interface{}]() (T, error) {
 		desiredType = reflect.TypeOf((*T)(nil)).Elem()
 	}
 
-	raw, err := c.Resolve(core.NewTypeResolvingKey(desiredType))
+	raw, err := c.Resolve(core.NewTypeDependencyKey(desiredType))
 
-	return raw.(T), err
+	if err != nil {
+		return def, err
+	}
+
+	return raw.(T), nil
+}
+
+func Check() error {
+	err := c.Check()
+
+	if err != nil {
+		return ErrDependenciesInconsistent
+	}
+
+	return nil
 }
 
 func ResolveNamed[T interface{}](name string) (T, error) {
-	raw, err := c.Resolve(core.NewRawResolvingKey(name))
+	raw, err := c.Resolve(core.NewRawDependencyKey(name))
 	return raw.(T), err
 }

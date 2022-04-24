@@ -27,7 +27,7 @@ func TestResolveByFunc(t *testing.T) {
 	strategy, err := strategies.NewFuncStrategy(f)
 	require.NoError(t, err, "error was not expected")
 	resolverMock := testdata.NewMockResolver(ctrl)
-	dependencyKey := core.NewTypeResolvingKey(reflect.TypeOf(expectedString))
+	dependencyKey := core.NewTypeDependencyKey(reflect.TypeOf(expectedString))
 	resolverMock.EXPECT().Resolve(dependencyKey).Return(expectedString, nil)
 
 	actual, err := strategy.Resolve(resolverMock)
@@ -48,7 +48,7 @@ func TestReturnFuncArgDependencyResolveError(t *testing.T) {
 	strategy, err := strategies.NewFuncStrategy(f)
 	require.NoError(t, err, "error was not expected")
 	resolverMock := testdata.NewMockResolver(ctrl)
-	dependencyKey := core.NewTypeResolvingKey(reflect.TypeOf(expectedString))
+	dependencyKey := core.NewTypeDependencyKey(reflect.TypeOf(expectedString))
 	resolverMock.EXPECT().Resolve(dependencyKey).Return(nil, ErrExpected)
 
 	_, err = strategy.Resolve(resolverMock)
@@ -67,7 +67,7 @@ func TestFuncStrategyDefaultKey(t *testing.T) {
 			SomeString: s,
 		}
 	}
-	expected := core.NewTypeResolvingKey(reflect.TypeOf(input))
+	expected := core.NewTypeDependencyKey(reflect.TypeOf(input))
 	strategy, err := strategies.NewFuncStrategy(f)
 	require.NoError(t, err, "err was not expected")
 
@@ -80,5 +80,25 @@ func TestErrorNilFunc(t *testing.T) {
 	t.Parallel()
 
 	_, err := strategies.NewFuncStrategy(nil)
-	require.ErrorIs(t, err, strategies.ErrNilType, "error mismatch")
+	require.ErrorIs(t, err, strategies.ErrNilInput, "error mismatch")
+}
+
+func TestErrorFuncNilDependency(t *testing.T) {
+	t.Parallel()
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	f := func(s string) TestStruct {
+		return TestStruct{
+			SomeString: s,
+		}
+	}
+	strategy, err := strategies.NewFuncStrategy(f)
+	require.NoError(t, err, "error was not expected")
+	resolverMock := testdata.NewMockResolver(ctrl)
+	dependencyKey := core.NewTypeDependencyKey(reflect.TypeOf(expectedString))
+	resolverMock.EXPECT().Resolve(dependencyKey).Return(nil, nil)
+
+	_, err = strategy.Resolve(resolverMock)
+	require.ErrorIs(t, err, strategies.ErrNilDependency, "error mismatch")
 }

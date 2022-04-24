@@ -35,7 +35,7 @@ func TestResolveByFields(t *testing.T) {
 	strategy, err := strategies.NewFieldStrategy(reflect.TypeOf(expected))
 	require.NoError(t, err, "error was not expected")
 	resolverMock := testdata.NewMockResolver(ctrl)
-	dependencyKey := core.NewTypeResolvingKey(reflect.TypeOf(expectedString))
+	dependencyKey := core.NewTypeDependencyKey(reflect.TypeOf(expectedString))
 	resolverMock.EXPECT().Resolve(dependencyKey).Return(expectedString, nil)
 
 	actual, err := strategy.Resolve(resolverMock)
@@ -54,7 +54,7 @@ func TestReturnFieldDependencyResolveError(t *testing.T) {
 	strategy, err := strategies.NewFieldStrategy(reflect.TypeOf(expected))
 	require.NoError(t, err, "error was not expected")
 	resolverMock := testdata.NewMockResolver(ctrl)
-	dependencyKey := core.NewTypeResolvingKey(reflect.TypeOf(expectedString))
+	dependencyKey := core.NewTypeDependencyKey(reflect.TypeOf(expectedString))
 	resolverMock.EXPECT().Resolve(dependencyKey).Return(nil, ErrExpected)
 
 	_, err = strategy.Resolve(resolverMock)
@@ -68,7 +68,7 @@ func TestFieldStrategyDefaultKey(t *testing.T) {
 	input := TestStruct{
 		SomeString: expectedString,
 	}
-	expected := core.NewTypeResolvingKey(reflect.TypeOf(input))
+	expected := core.NewTypeDependencyKey(reflect.TypeOf(input))
 	strategy, err := strategies.NewFieldStrategy(reflect.TypeOf(input))
 	require.NoError(t, err, "err was not expected")
 
@@ -81,5 +81,23 @@ func TestErrorNilType(t *testing.T) {
 	t.Parallel()
 
 	_, err := strategies.NewFieldStrategy(nil)
-	require.ErrorIs(t, err, strategies.ErrNilType, "error mismatch")
+	require.ErrorIs(t, err, strategies.ErrNilInput, "error mismatch")
+}
+
+func TestErrorFieldNilDependency(t *testing.T) {
+	t.Parallel()
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	expected := TestStruct{
+		SomeString: expectedString,
+	}
+	strategy, err := strategies.NewFieldStrategy(reflect.TypeOf(expected))
+	require.NoError(t, err, "error was not expected")
+	resolverMock := testdata.NewMockResolver(ctrl)
+	dependencyKey := core.NewTypeDependencyKey(reflect.TypeOf(expectedString))
+	resolverMock.EXPECT().Resolve(dependencyKey).Return(nil, nil)
+
+	_, err = strategy.Resolve(resolverMock)
+	require.ErrorIs(t, err, strategies.ErrNilDependency, "error mismatch")
 }

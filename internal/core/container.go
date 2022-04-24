@@ -2,5 +2,6 @@ package core
 
 type Container interface {
 	Resolver
-	Registrator
+	Register(k DependencyKey, s ResolvingStrategy)
+	Check() error
 }

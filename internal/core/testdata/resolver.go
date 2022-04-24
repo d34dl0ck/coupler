@@ -35,7 +35,7 @@ func (m *MockResolver) EXPECT() *MockResolverMockRecorder {
 }
 
 // Resolve mocks base method.
-func (m *MockResolver) Resolve(k core.ResolvingKey) (interface{}, error) {
+func (m *MockResolver) Resolve(k core.DependencyKey) (interface{}, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Resolve", k)
 	ret0, _ := ret[0].(interface{})

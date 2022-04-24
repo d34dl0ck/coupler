@@ -11,6 +11,9 @@ Coupler should be a simple but flexible dependency injection container for Go. I
 You can find the examples in the coupler package of the current module. Anyway, it's considered to use two basic functions: Register and Resolve.
 The following example showing the registration the struct of two fields as interface implementation (errors check was skipped):
 ```
+// importing Coupler
+import c "github.com/d34dl0ck/coupler/pkg/coupler"
+
 // our struct, that implements some interface testInterface
 type testStruct struct {
 	SomeString string
@@ -18,14 +21,17 @@ type testStruct struct {
 }
 
 // register with Coupler
-err := Register(ByInstance("some_string"))
-err = Register(ByInstance(34))
-err = Register(
-	ByType[testStruct](),
-	AsImplementationOf[testInterface]())
+err := c.Register(c.ByInstance("some_string"))
+err = c.Register(c.ByInstance(34))
+err = c.Register(
+	c.ByType[testStruct](),
+	c.AsImplementationOf[testInterface]())
+
+// check all dependencies can be resolved
+err = c.Check()
 
 // resolve with Couple
-instance, err := Resolve[testInterface]()
+instance, err := c.Resolve[testInterface]()
 ```
 
 # Architecture

@@ -12,7 +12,7 @@ type InstanceStrategy struct {
 
 func NewInstanceStrategy(instance interface{}) (core.ResolvingStrategy, error) {
 	if instance == nil {
-		return nil, ErrNilType
+		return nil, ErrNilInput
 	}
 
 	return InstanceStrategy{
@@ -24,6 +24,6 @@ func (s InstanceStrategy) Resolve(_ core.Resolver) (interface{}, error) {
 	return s.instance, nil
 }
 
-func (s InstanceStrategy) ProvideDefaultKey() core.ResolvingKey {
-	return core.NewTypeResolvingKey(reflect.TypeOf(s.instance))
+func (s InstanceStrategy) ProvideDefaultKey() core.DependencyKey {
+	return core.NewTypeDependencyKey(reflect.TypeOf(s.instance))
 }

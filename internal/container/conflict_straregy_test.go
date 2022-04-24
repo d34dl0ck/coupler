@@ -20,7 +20,7 @@ func TestOverwriteStrategy(t *testing.T) {
 	registrations := make(Registrations, 0)
 
 	actual := strategy.Solve(
-		core.NewRawResolvingKey("some"),
+		core.NewRawDependencyKey("some"),
 		expected,
 		&registrations,
 	)

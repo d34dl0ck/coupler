@@ -4,6 +4,7 @@ import (
 	"errors"
 	"testing"
 
+	"github.com/d34dl0ck/coupler/internal/container"
 	"github.com/d34dl0ck/coupler/internal/core"
 	"github.com/stretchr/testify/require"
 )
@@ -31,8 +32,6 @@ type testInterface interface {
 }
 
 func TestRegistrationByInstance(t *testing.T) {
-	t.Parallel()
-
 	err := Register(ByInstance(expectedString))
 
 	require.NoError(t, err, "no err was expected for string registration")
@@ -44,8 +43,6 @@ func TestRegistrationByInstance(t *testing.T) {
 }
 
 func TestRegistrationByFunc(t *testing.T) {
-	t.Parallel()
-
 	expected := createExpected(t)
 	err := Register(ByFunc(func(s string, i int) testStruct {
 		return testStruct{
@@ -62,8 +59,6 @@ func TestRegistrationByFunc(t *testing.T) {
 }
 
 func TestRegistrationByType(t *testing.T) {
-	t.Parallel()
-
 	expected := createExpected(t)
 	err := Register(ByType[testStruct]())
 	require.NoError(t, err, "no err was expected for struct registration")
@@ -75,9 +70,7 @@ func TestRegistrationByType(t *testing.T) {
 }
 
 func TestRegistrationByTypeWithName(t *testing.T) {
-	t.Parallel()
 	dependencyName := "some_mega_dependency"
-
 	expected := createExpected(t)
 	err := Register(
 		ByType[testStruct](),
@@ -91,8 +84,6 @@ func TestRegistrationByTypeWithName(t *testing.T) {
 }
 
 func TestRegistrationByTypeAsImplementation(t *testing.T) {
-	t.Parallel()
-
 	expected := createExpected(t)
 	err := Register(
 		ByType[testStruct](),
@@ -106,46 +97,65 @@ func TestRegistrationByTypeAsImplementation(t *testing.T) {
 }
 
 func TestErrorWhenStrategyWasNotSet(t *testing.T) {
-	t.Parallel()
-
 	err := Register(byEmptyResolve())
 
 	require.ErrorIs(t, err, core.ErrStrategyIsEmpty)
 }
 
 func TestErrorWhenResolveOptionReturnError(t *testing.T) {
-	t.Parallel()
-
 	err := Register(byErrorResolve())
 	require.ErrorIs(t, ErrExpected, err)
 }
 
 func TestErrorWhenRegistrationOptionReturnError(t *testing.T) {
-	t.Parallel()
-
 	err := Register(byEmptyResolve(), withErrorRegistration())
 	require.ErrorIs(t, ErrExpected, err)
 }
 
 func TestErrorTypeInterfaceRegistration(t *testing.T) {
-	t.Parallel()
-
 	err := Register(ByType[testInterface]())
 	require.ErrorIs(t, err, ErrRegistration, "error mismatch")
 }
 
 func TestErrorNilInstanceRegistration(t *testing.T) {
-	t.Parallel()
-
 	err := Register(ByInstance(nil))
 	require.ErrorIs(t, err, ErrRegistration, "error mismatch")
 }
 
 func TestErrorNilFuncRegistration(t *testing.T) {
-	t.Parallel()
-
 	err := Register(ByFunc(nil))
 	require.ErrorIs(t, err, ErrRegistration, "error mismatch")
+}
+
+func TestCheckSuccess(t *testing.T) {
+	c = container.NewContainer()
+
+	err := Register(ByInstance(expectedString))
+	require.NoError(t, err, "no err was expected for string registration")
+
+	err = Register(ByInstance(expectedInt))
+	require.NoError(t, err, "no err was expected for int registration")
+
+	err = Register(ByType[testStruct]())
+	require.NoError(t, err, "no err was expected for custom type registration")
+
+	err = Check()
+
+	require.NoError(t, err, "no error was expected")
+}
+
+func TestCheckFail(t *testing.T) {
+	c = container.NewContainer()
+
+	err := Register(ByInstance(expectedInt))
+	require.NoError(t, err, "no err was expected for int registration")
+
+	err = Register(ByType[testStruct]())
+	require.NoError(t, err, "no err was expected for custom type registration")
+
+	err = Check()
+
+	require.ErrorIs(t, err, ErrDependenciesInconsistent, "error mismatch")
 }
 
 func byEmptyResolve() ResolveOption {
