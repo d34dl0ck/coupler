@@ -30,13 +30,20 @@ err = c.Register(
 // check all dependencies can be resolved
 err = c.Check()
 
-// resolve with Couple
+// resolve with Coupler
 instance, err := c.Resolve[testInterface]()
 ```
 
 # Architecture
+The following cases are supported by Coupler:
 
-TBD
+![Types](/docs/Cases.jpg)
+
+This class diagram illustrates types:
+
+![Types](/docs/Types.jpg)
+
+More documentation will be placed in the docs directory and godoc documentation.
 
 # Package structure
 
