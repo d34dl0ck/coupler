@@ -16,8 +16,8 @@ func TestResolveByInstance(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	expected := TestStruct{
-		SomeString: expectedString,
+	expected := strategies.TestStruct{
+		SomeString: strategies.ExpectedTestString,
 	}
 	strategy, err := strategies.NewInstanceStrategy(expected)
 	require.NoError(t, err, "error was not expected")
@@ -31,8 +31,8 @@ func TestResolveByInstance(t *testing.T) {
 func TestInstanceStrategyDefaultKey(t *testing.T) {
 	t.Parallel()
 
-	input := TestStruct{
-		SomeString: expectedString,
+	input := strategies.TestStruct{
+		SomeString: strategies.ExpectedTestString,
 	}
 	expected := core.NewTypeDependencyKey(reflect.TypeOf(input))
 	strategy, err := strategies.NewInstanceStrategy(input)

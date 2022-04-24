@@ -16,19 +16,19 @@ func TestResolveByFunc(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	expected := TestStruct{
-		SomeString: expectedString,
+	expected := strategies.TestStruct{
+		SomeString: strategies.ExpectedTestString,
 	}
-	f := func(s string) TestStruct {
-		return TestStruct{
+	f := func(s string) strategies.TestStruct {
+		return strategies.TestStruct{
 			SomeString: s,
 		}
 	}
 	strategy, err := strategies.NewFuncStrategy(f)
 	require.NoError(t, err, "error was not expected")
 	resolverMock := testdata.NewMockResolver(ctrl)
-	dependencyKey := core.NewTypeDependencyKey(reflect.TypeOf(expectedString))
-	resolverMock.EXPECT().Resolve(dependencyKey).Return(expectedString, nil)
+	dependencyKey := core.NewTypeDependencyKey(reflect.TypeOf(strategies.ExpectedTestString))
+	resolverMock.EXPECT().Resolve(dependencyKey).Return(strategies.ExpectedTestString, nil)
 
 	actual, err := strategy.Resolve(resolverMock)
 	require.NoError(t, err, "error was not expected")
@@ -40,30 +40,30 @@ func TestReturnFuncArgDependencyResolveError(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	f := func(s string) TestStruct {
-		return TestStruct{
+	f := func(s string) strategies.TestStruct {
+		return strategies.TestStruct{
 			SomeString: s,
 		}
 	}
 	strategy, err := strategies.NewFuncStrategy(f)
 	require.NoError(t, err, "error was not expected")
 	resolverMock := testdata.NewMockResolver(ctrl)
-	dependencyKey := core.NewTypeDependencyKey(reflect.TypeOf(expectedString))
-	resolverMock.EXPECT().Resolve(dependencyKey).Return(nil, ErrExpected)
+	dependencyKey := core.NewTypeDependencyKey(reflect.TypeOf(strategies.ExpectedTestString))
+	resolverMock.EXPECT().Resolve(dependencyKey).Return(nil, strategies.ErrExpected)
 
 	_, err = strategy.Resolve(resolverMock)
 
-	require.ErrorIs(t, err, ErrExpected, "error was expected")
+	require.ErrorIs(t, err, strategies.ErrExpected, "error was expected")
 }
 
 func TestFuncStrategyDefaultKey(t *testing.T) {
 	t.Parallel()
 
-	input := TestStruct{
-		SomeString: expectedString,
+	input := strategies.TestStruct{
+		SomeString: strategies.ExpectedTestString,
 	}
-	f := func(s string) TestStruct {
-		return TestStruct{
+	f := func(s string) strategies.TestStruct {
+		return strategies.TestStruct{
 			SomeString: s,
 		}
 	}
@@ -88,15 +88,15 @@ func TestErrorFuncNilDependency(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
-	f := func(s string) TestStruct {
-		return TestStruct{
+	f := func(s string) strategies.TestStruct {
+		return strategies.TestStruct{
 			SomeString: s,
 		}
 	}
 	strategy, err := strategies.NewFuncStrategy(f)
 	require.NoError(t, err, "error was not expected")
 	resolverMock := testdata.NewMockResolver(ctrl)
-	dependencyKey := core.NewTypeDependencyKey(reflect.TypeOf(expectedString))
+	dependencyKey := core.NewTypeDependencyKey(reflect.TypeOf(strategies.ExpectedTestString))
 	resolverMock.EXPECT().Resolve(dependencyKey).Return(nil, nil)
 
 	_, err = strategy.Resolve(resolverMock)

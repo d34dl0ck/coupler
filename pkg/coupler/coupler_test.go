@@ -23,6 +23,8 @@ type testStruct struct {
 	SomeInt    int
 }
 
+type notRegisteredType struct{}
+
 func (testStruct) TestMethod(t *testing.T) {
 	t.Helper()
 }
@@ -156,6 +158,12 @@ func TestCheckFail(t *testing.T) {
 	err = Check()
 
 	require.ErrorIs(t, err, ErrDependenciesInconsistent, "error mismatch")
+}
+
+func TestNoDependencyError(t *testing.T) {
+	_, err := Resolve[notRegisteredType]()
+
+	require.ErrorIs(t, err, core.ErrDependencyNotRegistered)
 }
 
 func byEmptyResolve() ResolveOption {

@@ -1,4 +1,4 @@
-package strategies_test
+package strategies
 
 import (
 	"errors"
@@ -7,13 +7,12 @@ import (
 
 	"github.com/d34dl0ck/coupler/internal/core"
 	"github.com/d34dl0ck/coupler/internal/core/testdata"
-	"github.com/d34dl0ck/coupler/internal/strategies"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
 )
 
 const (
-	expectedString = "some_expected"
+	ExpectedTestString = "some_expected"
 )
 
 var (
@@ -24,19 +23,23 @@ type TestStruct struct {
 	SomeString string
 }
 
+type TestStructUnexportedField struct {
+	someString string
+}
+
 func TestResolveByFields(t *testing.T) {
 	t.Parallel()
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
 	expected := TestStruct{
-		SomeString: expectedString,
+		SomeString: ExpectedTestString,
 	}
-	strategy, err := strategies.NewFieldStrategy(reflect.TypeOf(expected))
+	strategy, err := NewFieldStrategy(reflect.TypeOf(expected))
 	require.NoError(t, err, "error was not expected")
 	resolverMock := testdata.NewMockResolver(ctrl)
-	dependencyKey := core.NewTypeDependencyKey(reflect.TypeOf(expectedString))
-	resolverMock.EXPECT().Resolve(dependencyKey).Return(expectedString, nil)
+	dependencyKey := core.NewTypeDependencyKey(reflect.TypeOf(ExpectedTestString))
+	resolverMock.EXPECT().Resolve(dependencyKey).Return(ExpectedTestString, nil)
 
 	actual, err := strategy.Resolve(resolverMock)
 	require.NoError(t, err, "error was not expected")
@@ -49,12 +52,12 @@ func TestReturnFieldDependencyResolveError(t *testing.T) {
 	defer ctrl.Finish()
 
 	expected := TestStruct{
-		SomeString: expectedString,
+		SomeString: ExpectedTestString,
 	}
-	strategy, err := strategies.NewFieldStrategy(reflect.TypeOf(expected))
+	strategy, err := NewFieldStrategy(reflect.TypeOf(expected))
 	require.NoError(t, err, "error was not expected")
 	resolverMock := testdata.NewMockResolver(ctrl)
-	dependencyKey := core.NewTypeDependencyKey(reflect.TypeOf(expectedString))
+	dependencyKey := core.NewTypeDependencyKey(reflect.TypeOf(ExpectedTestString))
 	resolverMock.EXPECT().Resolve(dependencyKey).Return(nil, ErrExpected)
 
 	_, err = strategy.Resolve(resolverMock)
@@ -66,10 +69,10 @@ func TestFieldStrategyDefaultKey(t *testing.T) {
 	t.Parallel()
 
 	input := TestStruct{
-		SomeString: expectedString,
+		SomeString: ExpectedTestString,
 	}
 	expected := core.NewTypeDependencyKey(reflect.TypeOf(input))
-	strategy, err := strategies.NewFieldStrategy(reflect.TypeOf(input))
+	strategy, err := NewFieldStrategy(reflect.TypeOf(input))
 	require.NoError(t, err, "err was not expected")
 
 	actual := strategy.ProvideDefaultKey()
@@ -80,8 +83,8 @@ func TestFieldStrategyDefaultKey(t *testing.T) {
 func TestErrorNilType(t *testing.T) {
 	t.Parallel()
 
-	_, err := strategies.NewFieldStrategy(nil)
-	require.ErrorIs(t, err, strategies.ErrNilInput, "error mismatch")
+	_, err := NewFieldStrategy(nil)
+	require.ErrorIs(t, err, ErrNilInput, "error mismatch")
 }
 
 func TestErrorFieldNilDependency(t *testing.T) {
@@ -90,14 +93,43 @@ func TestErrorFieldNilDependency(t *testing.T) {
 	defer ctrl.Finish()
 
 	expected := TestStruct{
-		SomeString: expectedString,
+		SomeString: ExpectedTestString,
 	}
-	strategy, err := strategies.NewFieldStrategy(reflect.TypeOf(expected))
+	strategy, err := NewFieldStrategy(reflect.TypeOf(expected))
 	require.NoError(t, err, "error was not expected")
 	resolverMock := testdata.NewMockResolver(ctrl)
-	dependencyKey := core.NewTypeDependencyKey(reflect.TypeOf(expectedString))
+	dependencyKey := core.NewTypeDependencyKey(reflect.TypeOf(ExpectedTestString))
 	resolverMock.EXPECT().Resolve(dependencyKey).Return(nil, nil)
 
 	_, err = strategy.Resolve(resolverMock)
-	require.ErrorIs(t, err, strategies.ErrNilDependency, "error mismatch")
+	require.ErrorIs(t, err, ErrNilDependency, "error mismatch")
+}
+
+func TestUnexportedFieldDetectedOnConstruction(t *testing.T) {
+	t.Parallel()
+	var def TestStructUnexportedField
+	brokenType := reflect.TypeOf(def)
+
+	_, err := NewFieldStrategy(brokenType)
+
+	require.ErrorIs(t, err, ErrUnexportedFieldDetected, "error mismatch")
+}
+
+func TestUnexportedFieldDetectedOnResolve(t *testing.T) {
+	t.Parallel()
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	var brokenDef TestStructUnexportedField
+	var def TestStruct
+	brokenType := reflect.TypeOf(brokenDef)
+	normalType := reflect.TypeOf(def)
+	s, err := NewFieldStrategy(normalType)
+	fieldStrategy := s.(FieldStrategy)
+	fieldStrategy.t = brokenType
+	resolverMock := testdata.NewMockResolver(ctrl)
+
+	_, err = fieldStrategy.Resolve(resolverMock)
+
+	require.ErrorIs(t, err, ErrUnexportedFieldDetected, "error mismatch")
 }
