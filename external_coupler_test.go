@@ -1,9 +1,10 @@
+//lint:file-ignore U1000 Ignore all unused code, it's testing data
 package coupler_test
 
 import (
 	"testing"
 
-	c "github.com/d34dl0ck/coupler/pkg/coupler"
+	c "github.com/d34dl0ck/coupler"
 	"github.com/stretchr/testify/require"
 )
 

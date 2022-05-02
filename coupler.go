@@ -9,14 +9,10 @@ import (
 )
 
 var (
-	c                           core.Container
-	ErrRegistration             = errors.New("cannot register dependency")
-	ErrDependenciesInconsistent = errors.New("some of registered dependencies cannot be resolved cause of missing dependency")
+	c                           core.Container = container.NewContainer()
+	ErrRegistration                            = errors.New("cannot register dependency")
+	ErrDependenciesInconsistent                = errors.New("some of registered dependencies cannot be resolved cause of missing dependency")
 )
-
-func init() {
-	c = container.NewContainer()
-}
 
 func Register(resolveOption ResolveOption, opts ...RegistrationOption) error {
 	r := &Registration{}
